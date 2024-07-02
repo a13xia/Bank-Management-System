@@ -295,36 +295,73 @@ void transaction_menu(unsigned char matrix_of_characters[][3][40], unsigned long
                 printf("\n");
             }
 
-            printf("\n\n   In order to make a transaction, you need to introduce both the the Source IBAN and the Destination IBAN.\n");
+            printf("\n\n   In order to make a transaction, you need to introduce both the the Source account (from those you have above),\n and the Destination IBAN.\n\n");
 
 
-            char source_iban[30], destination_iban[30];
+
+            char destination_iban[30];
+            int acc;
             long int am;
 
-            printf("Please enter your Source IBAN: ");
+            printf("Please enter the number of the Source account: ");
             scanf("%*c");
-            scanf("%[^\n]%*c", source_iban);
+
+            //NEW
+            // I used the account number, instead of the actual IBAN
+
+            scanf("%d", &acc);
+            acc = acc-1;
+            char source_iban[30];
+            strcpy(source_iban, matrix_of_characters[acc][1]);
+
+            //NEW
+            // This while reads the newline character that is left in the buffer
+            while (getchar() != '\n');
 
             printf("\nPlease enter the Destination IBAN: ");
             scanf("%[^\n]%*c", destination_iban);
 
+            //NEW
+            // opion to enter the iban until it's correct
+            if(strcmp(source_iban, destination_iban) == 0){
+                while(strcmp(source_iban, destination_iban) == 0){
+                    printf("  The IBANs need to be different!");
+                    printf("\nPlease enter the Destination IBAN: ");
+                    scanf("%[^\n]%*c", destination_iban);
+                }
+            }
+
+
             printf("\nPlease enter the amount you want to transfer: ");
             scanf("%d", &am);
 
-            if(amount < 0){
-                printf("  You need to introduce a positive number of money! ");
+
+            if(am < 0){
+                while(am < 0){
+                        printf("\n  You need to introduce a positive number of money: ");
+                        scanf("%d", &am);
+                    }
             }
-            else if(strcmp(source_iban, destination_iban) == 0)
-                printf("  The IBANs need to be different!");
-            else{
-                makeTransaction("accounts2.csv", accounts, &nr_of_accounts, source_iban, destination_iban, am);
-                writeToCSV("accounts2.csv", accounts, nr_of_accounts);
-                printf("   You successfully sent the money!");
+
+
+            // NEW
+            //  We check if the source account has enough money for the transaction
+            if(amount[acc] < am){
+                    while(amount[acc] < am){
+                        printf("\n\n   You don't have enough money on this account, to be able to perform this transaction!\n   Try another amount: ");
+                        scanf("%d", &am);
+                    }
             }
+
+            makeTransaction("accounts2.csv", accounts, &nr_of_accounts, source_iban, destination_iban, am);
+            writeToCSV("accounts2.csv", accounts, nr_of_accounts);
+            printf("\n\n   Thank you for your transaction! You successfully sent the money!");
+
 
 }
 
-
+// ------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------
 
 
 
@@ -433,7 +470,7 @@ int main(int argc, char *argv[])
 //  NEW
 // I added this possibility to go back to the main and perform other operations
                 system("CLS");
-                printf("\n   We are sorry, but you can't perform any transaction because you don't have an account......Maybe you would like to create one first!\n");
+                printf("\n   We are sorry, but you can't perform any transaction because you don't have an account...\n   Maybe you would like to create one first!\n");
                 main(argc, argv);
             }
             else
